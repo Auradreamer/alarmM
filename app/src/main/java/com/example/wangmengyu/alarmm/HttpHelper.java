@@ -1,22 +1,26 @@
 package com.example.wangmengyu.alarmm;
 
 import android.widget.Toast;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.*;
 
 
 public class HttpHelper {
-	
+
 	private static DatabaseHelper myDB;
-	private static URL url = new URL("http://db.science.uoit.ca:9000");
+	private static URL url;
 	private static HttpURLConnection urlConnection;
 	private static OutputStream writer;
 	private static InputStream listener;
-	
-	public HttpHelper (DatabaseHelper db) {
+
+	public HttpHelper(DatabaseHelper db) {
 		myDB = db;
 	}
-	
-	public void createConnection() {
+
+	public String createConnection() {
 		try {
+			url = new URL("http://db.science.uoit.ca:9000");
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setReadTimeout(10000);
 			urlConnection.setConnectTimeout(15000);
@@ -26,10 +30,16 @@ public class HttpHelper {
 			writer = new BufferedOutputStream(urlConnection.getOutputStream());
 			listener = new BufferedInputStream(urlConnection.getInputStream());
 		} catch (Exception e) {
-			Toast.makeText(this, "Error establishing connection: "+e.toString(), Toast.LENGTH_SHORT).show();
+			e.printStackTrace();
+			return e.toString();
+
+
 		}
-		
+		return "";
+
 	}
+
+
 	
 	public void removeConnection() {
 		urlConnection.disconnect();
@@ -47,16 +57,16 @@ public class HttpHelper {
 		String params = "ssid="+ssid+"&strength="+Integer.toString(strength)+"&stamp="+t;
 		
 		try {
-			
-			// send params to writer
-			
-			// read response from listener
-			
-			//if response contains a error
-			
-				//output error to toast
 
-		finally {
+			// send params to writer
+
+			// read response from listener
+
+			//if response contains a error
+
+			//output error to toast
+
+		} finally {
 			urlConnection.disconnect();
 		}
    

@@ -22,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     Button start;
     Button stop;
     Button sync;
+    HttpHelper myHttpHelper;
+    DatabaseHelper myDB;
 
 
 
@@ -115,6 +117,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sync() {
+
+        sync.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        myDB = new DatabaseHelper(MainActivity.this);
+                        myHttpHelper = new HttpHelper(myDB);
+                        String error = myHttpHelper.createConnection();
+                        if (error != null) {
+                            Toast.makeText(MainActivity.this, "Connection error\n" + error, Toast.LENGTH_SHORT).show();
+                        }
+
+
+                        myHttpHelper.removeConnection();
+
+
+                    }
+                }
+
+
+        );
+
+
+
 
     }
 
