@@ -19,9 +19,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
+import android.util.Log;
 
 
 public class MyService extends Service {
+
+    private static final String TAG = "com.example.wangmengyu.alarmm";
 
     public static final String ACTION = "com.example.wangmengyu.alarmm";
 
@@ -48,9 +51,14 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Runnable r = new Runnable() {
+
+
+
+        //make a thread
+       /* Runnable r = new Runnable() {
             @Override
             public void run() {
+
                 initDatabase();
                 insertion();
             }
@@ -58,6 +66,9 @@ public class MyService extends Service {
 
         Thread thread = new Thread(r);
         thread.start();
+        */
+        initDatabase();
+        insertion();
         return Service.START_STICKY;
     }
 
@@ -100,7 +111,9 @@ public class MyService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+
+
+
     }
 
     @Override

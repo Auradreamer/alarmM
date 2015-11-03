@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
         );
 
-        startSer();
 
 
 
@@ -75,11 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void startSer() {
 
-
-
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
