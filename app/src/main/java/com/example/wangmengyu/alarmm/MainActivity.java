@@ -20,6 +20,10 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity {
 
     Button start;
+    Button stop;
+    Button sync;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +42,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
         start = (Button)findViewById(R.id.startbtn);
+        stop = (Button)findViewById(R.id.stopbtn);
+        sync = (Button)findViewById(R.id.syncbtn);
+        start();
+        stop();
+        sync();
+
+
+
+
+
+
+
+
+
+    }
+
+    public void start() {
 
         start.setOnClickListener(
                 new View.OnClickListener() {
@@ -45,12 +66,35 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(View view) {
 
                         Intent intent = new Intent(MainActivity.this, MyService.class);
-                        switch (view.getId())
-                        {
+                        switch (view.getId()) {
                             case R.id.startbtn:
                                 //startService(intent);
-                                PollingUtils.startPollingService(MainActivity.this,60,MyService.class,MyService.ACTION);
+                                PollingUtils.startPollingService(MainActivity.this, 60, MyService.class, MyService.ACTION);
                                 break;
+                            default:
+                                break;
+                        }
+
+
+                    }
+                }
+
+
+        );
+
+
+    }
+
+    public void stop() {
+
+        stop.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        Intent intent = new Intent(MainActivity.this, MyService.class);
+                        switch (view.getId())
+                        {
                             case R.id.stopbtn:
                                 //stopService(intent);
                                 PollingUtils.stopPollingService(MainActivity.this,MyService.class,MyService.ACTION);
@@ -68,9 +112,9 @@ public class MainActivity extends AppCompatActivity {
         );
 
 
+    }
 
-
-
+    public void sync() {
 
     }
 
