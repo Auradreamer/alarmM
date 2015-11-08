@@ -2,9 +2,12 @@ package com.example.wangmengyu.alarmm;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.Settings.Secure;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +18,13 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,8 +32,7 @@ public class MainActivity extends AppCompatActivity {
     Button start;
     Button stop;
     Button sync;
-    HttpHelper myHttpHelper;
-    DatabaseHelper myDB;
+
 
 
 
@@ -122,15 +131,16 @@ public class MainActivity extends AppCompatActivity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        myDB = new DatabaseHelper(MainActivity.this);
-                        myHttpHelper = new HttpHelper(myDB);
-                        String error = myHttpHelper.createConnection();
+                        UploadTask task = new UploadTask();
+                        task.execute();
+                        /*String error = myHttpHelper.createConnection();
                         if (error != null) {
                             Toast.makeText(MainActivity.this, "Connection error\n" + error, Toast.LENGTH_SHORT).show();
                         }
 
 
                         myHttpHelper.removeConnection();
+                        */
 
 
                     }
@@ -167,4 +177,111 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+    private class UploadTask extends AsyncTask<Void, Void, Void> {
+
+        private DatabaseHelper myDB;
+        private URL url;
+        private HttpURLConnection urlConnection;
+        private OutputStream writer;
+        private InputStream listener;
+        private ProgressDialog dialog = new ProgressDialog(MainActivity.this);
+        private String android_id = Secure.getString(MainActivity.this.getContentResolver(), Secure.ANDROID_ID);
+
+
+        public void onPreExecute() {
+            myDB = new DatabaseHelper(MainActivity.this);
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            try {
+                url = new URL("http://db.science.uoit.ca:9000");
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setReadTimeout(10000);
+                urlConnection.setConnectTimeout(15000);
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setDoInput(true);
+                urlConnection.setDoOutput(true);
+                writer = new BufferedOutputStream(urlConnection.getOutputStream());
+                listener = new BufferedInputStream(urlConnection.getInputStream());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            ScanRecord[] records = myDB.getAll();
+            int totalRecords = records.length;
+            String postData = "";
+            String response = "";
+            byte[] contents = new byte[1024];
+            int bytesRead = 0;
+            int currentRecord = 1;
+
+
+            //Kill task if there are no records
+            if (totalRecords == 0) {
+                Toast.makeText(getApplicationContext(), "Nothing in the local database to send.", Toast.LENGTH_LONG).show();
+                return null;
+            }
+
+            //send each record to server
+            for (ScanRecord r : records){
+
+                //create the post data in a string
+                try {
+                    postData = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(r.idToString(), "UTF-8")
+                            + "&" + URLEncoder.encode("timestamp", "UTF-8") + "=" + URLEncoder.encode(r.timestamp, "UTF-8")
+                            + "&" + URLEncoder.encode("ssid", "UTF-8") + "=" + URLEncoder.encode(r.ssid, "UTF-8")
+                            + "&" + URLEncoder.encode("level", "UTF-8") + "=" + URLEncoder.encode(r.levelToString(), "UTF-8")
+                            + "&" + URLEncoder.encode("android_id", "UTF-8") + "=" + URLEncoder.encode(android_id, "UTF-8");
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), "Encoding error: "+e.toString(), Toast.LENGTH_LONG).show();
+                    return null;
+                }
+
+
+                //send data
+                try {
+                    writer.write(postData.getBytes());
+                    writer.flush();
+
+                    while( (bytesRead = listener.read(contents)) != -1) {
+                        response+= new String(contents, 0, bytesRead);
+                    }
+
+                    if (!response.isEmpty()) {
+                        Toast.makeText(getApplicationContext(), "Problem sending data, received response from server: "
+                                +response, Toast.LENGTH_LONG).show();
+                        return null;
+                    }
+
+                    //remove record from local database
+                    myDB.delete(r.id);
+
+
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), "Problem sending data: "+e.toString(), Toast.LENGTH_LONG).show();
+                    return null;
+                } //end try to send data
+
+                //update progress bar
+                dialog.setProgress((int)Math.ceil(currentRecord/totalRecords));
+                currentRecord++;
+
+            } //for each r in record
+
+            return null;
+        }
+
+        protected void onProgressUpdate(String... progress) {
+
+        }
+
+        protected void onPostExecute(Void unused) {
+            dialog.dismiss();
+        }
+
+    } //end UploadTask
 }
