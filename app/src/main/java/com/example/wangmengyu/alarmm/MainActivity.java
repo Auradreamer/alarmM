@@ -14,7 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
-
+import android.os.StrictMode;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     Button sync;
     HttpHelper myHttpHelper;
     DatabaseHelper myDB;
+    String error;
 
 
 
@@ -48,17 +49,37 @@ public class MainActivity extends AppCompatActivity {
         sync = (Button)findViewById(R.id.syncbtn);
         start();
         stop();
+
+        // This also works (by using strickmode)
+
+        /*
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectDiskReads().detectDiskWrites().detectNetwork()
+                .penaltyLog().build());
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects().detectLeakedClosableObjects()
+                .penaltyLog().penaltyDeath().build());
+                */
+
         sync();
-
-
-
-
-
-
-
-
-
     }
+
+    // Create a new Thread to send request
+
+    public void sendRequest() {
+        new Thread((new Runnable() {
+            @Override
+            public void run() {
+
+                myDB = new DatabaseHelper(MainActivity.this);
+                myHttpHelper = new HttpHelper(myDB);
+                error = myHttpHelper.createConnection();
+
+
+            }
+        })).start();
+    }
+
 
     public void start() {
 
@@ -70,21 +91,15 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(MainActivity.this, MyService.class);
                         switch (view.getId()) {
                             case R.id.startbtn:
-                                //startService(intent);
-                                PollingUtils.startPollingService(MainActivity.this, 60, MyService.class, MyService.ACTION);
+                                //startService(intent); every x minutes
+                                PollingUtils.startPollingService(MainActivity.this, 300, MyService.class, MyService.ACTION);
                                 break;
                             default:
                                 break;
                         }
-
-
                     }
                 }
-
-
         );
-
-
     }
 
     public void stop() {
@@ -116,34 +131,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void sync() {
+   public void sync() {
 
         sync.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        myDB = new DatabaseHelper(MainActivity.this);
-                        myHttpHelper = new HttpHelper(myDB);
-                        String error = myHttpHelper.createConnection();
+
+                       sendRequest();
                         if (error != null) {
-                            Toast.makeText(MainActivity.this, "Connection error\n" + error, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Connection error\n" + error, Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Connection success", Toast.LENGTH_LONG).show();
                         }
 
 
-                        myHttpHelper.removeConnection();
-
+                       // myHttpHelper.removeConnection();
 
                     }
                 }
-
-
         );
-
-
-
-
     }
-
 
 
     @Override

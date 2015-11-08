@@ -1,12 +1,13 @@
 package com.example.wangmengyu.alarmm;
 
+import android.os.AsyncTask;
 import android.widget.Toast;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.*;
 
 
-public class HttpHelper {
+public class HttpHelper  {
 
 	private static DatabaseHelper myDB;
 	private static URL url;
@@ -27,6 +28,7 @@ public class HttpHelper {
 			urlConnection.setRequestMethod("POST");
 			urlConnection.setDoInput(true);
 			urlConnection.setDoOutput(true);
+			urlConnection.connect();
 			writer = new BufferedOutputStream(urlConnection.getOutputStream());
 			listener = new BufferedInputStream(urlConnection.getInputStream());
 		} catch (Exception e) {

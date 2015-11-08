@@ -24,8 +24,6 @@ import android.util.Log;
 
 public class MyService extends Service {
 
-    private static final String TAG = "com.example.wangmengyu.alarmm";
-
     public static final String ACTION = "com.example.wangmengyu.alarmm";
 
     WifiManager wifi;
@@ -41,10 +39,6 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-
-
-
     }
 
 
@@ -52,21 +46,6 @@ public class MyService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-
-
-        //make a thread
-       /* Runnable r = new Runnable() {
-            @Override
-            public void run() {
-
-                initDatabase();
-                insertion();
-            }
-        };
-
-        Thread thread = new Thread(r);
-        thread.start();
-        */
         initDatabase();
         insertion();
         return Service.START_STICKY;
@@ -118,7 +97,6 @@ public class MyService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
        return null;
     }
 }

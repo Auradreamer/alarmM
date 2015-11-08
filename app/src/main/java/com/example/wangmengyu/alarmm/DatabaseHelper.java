@@ -1,8 +1,6 @@
 package com.example.wangmengyu.alarmm;
 
-/**
- * Created by wangmengyu on 2015-10-26.
- */
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -20,7 +18,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
-        // TODO Auto-generated constructor stub
     }
 
     @Override
@@ -31,7 +28,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // TODO Auto-generated method stub
 
     }
 
