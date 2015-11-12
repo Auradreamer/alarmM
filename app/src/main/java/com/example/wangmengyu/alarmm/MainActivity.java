@@ -1,31 +1,31 @@
 package com.example.wangmengyu.alarmm;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.Settings.Secure;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Calendar;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,8 +40,9 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHelper myDB;
     private URL url;
     private HttpURLConnection urlConnection;
-    private OutputStream writer;
+    private BufferedWriter writer;
     private InputStream listener;
+    private String android_id;
 
 
 
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
+
         start = (Button)findViewById(R.id.startbtn);
         stop = (Button)findViewById(R.id.stopbtn);
         sync = (Button)findViewById(R.id.syncbtn);
@@ -74,25 +77,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendRequest() {
+
                 new Thread((new Runnable() {
                     @Override
                     public void run() {
 
 
-                        error = onPreExecute();
+                        //error = onPreExecute();
                         err = send();
+                        //onPostExecute();
 
-
+                        return;
                     }
 
                 })).start();
     }
-
+/*
     public String onPreExecute () {
         myDB = new DatabaseHelper(MainActivity.this);
         //dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+
+
         try {
-            url = new URL("http://db.science.uoit.ca:9000");
+            url = new URL("http://db.science.uoit.ca:9000/send_data");
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setReadTimeout(10000);
             urlConnection.setConnectTimeout(15000);
@@ -100,14 +107,17 @@ public class MainActivity extends AppCompatActivity {
             urlConnection.setDoInput(true);
             urlConnection.setDoOutput(true);
             urlConnection.connect();
-            writer = new BufferedOutputStream(urlConnection.getOutputStream());
+            // writer = new BufferedOutputStream(urlConnection.getOutputStream());
+            writer = new BufferedWriter(new OutputStreamWriter(urlConnection.getOutputStream(), "UTF-8"));
             listener = new BufferedInputStream(urlConnection.getInputStream());
+
         } catch (Exception e) {
             e.printStackTrace();
             return e.toString();
         }
         return "";
     }
+
 
     protected String send(){
 
@@ -134,19 +144,18 @@ public class MainActivity extends AppCompatActivity {
             //create the post data in a string
             try {
                 postData = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(r.idToString(), "UTF-8")
-                        + "&" + URLEncoder.encode("timestamp", "UTF-8") + "=" + URLEncoder.encode(r.timestamp, "UTF-8")
+                        + "&" + URLEncoder.encode("stamp", "UTF-8") + "=" + URLEncoder.encode(r.timestamp, "UTF-8")
                         + "&" + URLEncoder.encode("ssid", "UTF-8") + "=" + URLEncoder.encode(r.ssid, "UTF-8")
-                        + "&" + URLEncoder.encode("level", "UTF-8") + "=" + URLEncoder.encode(r.levelToString(), "UTF-8");
-                       // + "&" + URLEncoder.encode("android_id", "UTF-8") + "=" + URLEncoder.encode(android_id, "UTF-8");
+                        + "&" + URLEncoder.encode("strength", "UTF-8") + "=" + URLEncoder.encode(r.levelToString(), "UTF-8")
+                        + "&" + URLEncoder.encode("android_id", "UTF-8") + "=" + URLEncoder.encode(android_id, "UTF-8");
             } catch (Exception e) {
                 //oast.makeText(getApplicationContext(), "Encoding error: " + e.toString(), Toast.LENGTH_LONG).show();
                 return e.toString();
             }
 
-
             //send data
             try {
-                writer.write(postData.getBytes());
+                writer.write(postData);
                 writer.flush();
 
                 while ((bytesRead = listener.read(contents)) != -1) {
@@ -156,8 +165,10 @@ public class MainActivity extends AppCompatActivity {
                 if (!response.isEmpty()) {
                    // Toast.makeText(getApplicationContext(), "Problem sending data, received response from server: "
                      //       + response, Toast.LENGTH_LONG).show();
-                    e2 = "Problem sending data, received response from server: " + response;
-                    return e2;
+                    if (!response.equals("good")) {
+                        e2 = "Problem sending data, received response from server: " + response;
+                        return e2;
+                    }
                 }
 
                 //remove record from local database
@@ -179,12 +190,79 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    */
+
+    protected String send(){
+
+        //get records and set up json
+        myDB = new DatabaseHelper(MainActivity.this);
+        ScanRecord[] records = myDB.getAll();
+        JSONArray json_records = new JSONArray();
+        JSONObject json_r;
+
+        //convert each record into a json object and put in json array
+        for (ScanRecord r : records) {
+            try {
+                json_r = new JSONObject();
+                json_r.put("stamp", r.timestamp);
+                json_r.put("ssid", r.ssid);
+                json_r.put("strength", r.levelToString());
+                json_r.put("android_id", android_id);
+            } catch (Exception e) {
+                return e.toString();
+            }
+            json_records.put(json_r);
+        } //end for each r in record
+
+        //can catch a variety of wonderful things
+        try {
+            //constants
+            url = new URL("http://db.science.uoit.ca:9001/send_data");
+            String message = json_records.toString();
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout( 10000 /*milliseconds*/ );
+            conn.setConnectTimeout( 15000 /* milliseconds */ );
+            conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setFixedLengthStreamingMode(message.getBytes().length);
+
+            //make some HTTP header nicety
+            conn.setRequestProperty("Content-Type", "application/json;charset=utf-8");
+            conn.setRequestProperty("X-Requested-With", "XMLHttpRequest");
+
+            //open
+            conn.connect();
+
+            //setup send
+            OutputStream os = new BufferedOutputStream(conn.getOutputStream());
+            os.write(message.getBytes());
+            //clean up
+            os.flush();
+
+            //do somehting with response
+            InputStream is = conn.getInputStream();
+            //String contentAsString = readIt(is,len);
+
+            //clean up
+            os.close();
+            is.close();
+            conn.disconnect();
+        } catch (Exception e) {
+            return e.toString();
+        }
+        return null;
+    }
+
+
     protected void onProgressUpdate(String... progress) {
 
     }
 
-    protected void onPostExecute(Void unused) {
-        //dialog.dismiss();
+    protected void onPostExecute() {
+        urlConnection.disconnect();
+
     }
 
     public void start() {
@@ -198,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
                         switch (view.getId()) {
                             case R.id.startbtn:
                                 //startService(intent);
-                                PollingUtils.startPollingService(MainActivity.this, 300 , MyService.class, MyService.ACTION);
+                                PollingUtils.startPollingService(MainActivity.this, 10 , MyService.class, MyService.ACTION);
                                 break;
                             default:
                                 break;
@@ -250,19 +328,21 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
 
+
+
                         sendRequest();
 
                         if (error != null) {
-                            Toast.makeText(MainActivity.this, "Connection error\n" + error, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Connection error\n" + error, Toast.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(MainActivity.this, "Connection success", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Connection success", Toast.LENGTH_LONG).show();
                         }
 
                         if (err != null) {
-                            Toast.makeText(MainActivity.this, "error\n" + err, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "error\n" + err, Toast.LENGTH_LONG).show();
                         } else {
 
-                            Toast.makeText(MainActivity.this, "send success", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "send success", Toast.LENGTH_LONG).show();
 
                         }
 
