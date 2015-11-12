@@ -15,12 +15,15 @@ import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -97,31 +100,39 @@ public class MainActivity extends AppCompatActivity {
         myDB = new DatabaseHelper(MainActivity.this);
         ScanRecord[] records = myDB.getAll();
         JSONArray json_records = new JSONArray();
-        JSONObject json_r;
+        JSONObject json_r, json_message;
 
         //convert each record into a json object and put in json array
         for (ScanRecord r : records) {
             try {
                 json_r = new JSONObject();
-                json_r.put("stamp", r.timestamp);
+                json_r.put("stamp", URLEncoder.encode(r.timestamp, "UTF-8"));
                 json_r.put("ssid", r.ssid);
                 json_r.put("strength", r.levelToString());
-                json_r.put("android_id", android_id);
             } catch (Exception e) {
                 return e.toString();
             }
             json_records.put(json_r);
         } //end for each r in record
 
+        //package the android_id and the records together in one object
+        try {
+            json_message = new JSONObject();
+            json_message.put("android_id", android_id);
+            json_message.put("records", json_records);
+        } catch (Exception e) {
+            return e.toString();
+        }
+
         //can catch a variety of wonderful things
         try {
             //constants
             url = new URL("http://db.science.uoit.ca:9001/send_data");
-            String message = json_records.toString();
+            String message = json_message.toString();
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout( 10000 /*milliseconds*/ );
-            conn.setConnectTimeout( 15000 /* milliseconds */ );
+            conn.setReadTimeout( 50000 /*milliseconds*/ );
+            conn.setConnectTimeout( 50000 /* milliseconds */ );
             conn.setRequestMethod("POST");
             conn.setDoInput(true);
             conn.setDoOutput(true);
@@ -141,12 +152,27 @@ public class MainActivity extends AppCompatActivity {
             os.flush();
 
             //do somehting with response
+            /* Couldn't get this stuff to work
             InputStream is = conn.getInputStream();
-            //String contentAsString = readIt(is,len);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder response = new StringBuilder();
+            String line = "";
+            while ((line = reader.readLine()) != null)
+                response.append(line);
+
+            error = response.toString();
+
+            if (!response.toString().equals("hello")) {
+                myDB.deleteAll();
+                error = "Deleted all records from local database.";
+            }
+            */
+
+            myDB.deleteAll();
 
             //clean up
             os.close();
-            is.close();
+            //is.close();
             conn.disconnect();
         } catch (Exception e) {
             return e.toString();

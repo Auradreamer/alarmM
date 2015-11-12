@@ -11,7 +11,7 @@ public class ScanRecord {
 
     public ScanRecord(int id_, String timestamp_, String ssid_, int level_) {
         id = id_;
-        timestamp = timestamp;
+        timestamp = timestamp_;
         ssid = ssid_;
         level = level_;
     }
