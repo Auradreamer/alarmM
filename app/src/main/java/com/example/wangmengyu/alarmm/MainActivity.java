@@ -82,115 +82,14 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
 
-
-                        //error = onPreExecute();
                         err = send();
-                        //onPostExecute();
 
                         return;
                     }
 
                 })).start();
     }
-/*
-    public String onPreExecute () {
-        myDB = new DatabaseHelper(MainActivity.this);
-        //dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 
-
-        try {
-            url = new URL("http://db.science.uoit.ca:9000/send_data");
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setReadTimeout(10000);
-            urlConnection.setConnectTimeout(15000);
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoInput(true);
-            urlConnection.setDoOutput(true);
-            urlConnection.connect();
-            // writer = new BufferedOutputStream(urlConnection.getOutputStream());
-            writer = new BufferedWriter(new OutputStreamWriter(urlConnection.getOutputStream(), "UTF-8"));
-            listener = new BufferedInputStream(urlConnection.getInputStream());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return e.toString();
-        }
-        return "";
-    }
-
-
-    protected String send(){
-
-        ScanRecord[] records = myDB.getAll();
-        int totalRecords = records.length;
-        String postData = "";
-        String response = "";
-        byte[] contents = new byte[1024];
-        int bytesRead = 0;
-        int currentRecord = 1;
-
-
-        //Kill task if there are no records
-        if (totalRecords == 0) {
-            e1 = "Nothing in the local database to send";
-            return e1;
-           // Toast.makeText(getApplicationContext(), "Nothing in the local database to send.", Toast.LENGTH_LONG).show();
-           // return null;
-        }
-
-        //send each record to server
-        for (ScanRecord r : records) {
-
-            //create the post data in a string
-            try {
-                postData = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(r.idToString(), "UTF-8")
-                        + "&" + URLEncoder.encode("stamp", "UTF-8") + "=" + URLEncoder.encode(r.timestamp, "UTF-8")
-                        + "&" + URLEncoder.encode("ssid", "UTF-8") + "=" + URLEncoder.encode(r.ssid, "UTF-8")
-                        + "&" + URLEncoder.encode("strength", "UTF-8") + "=" + URLEncoder.encode(r.levelToString(), "UTF-8")
-                        + "&" + URLEncoder.encode("android_id", "UTF-8") + "=" + URLEncoder.encode(android_id, "UTF-8");
-            } catch (Exception e) {
-                //oast.makeText(getApplicationContext(), "Encoding error: " + e.toString(), Toast.LENGTH_LONG).show();
-                return e.toString();
-            }
-
-            //send data
-            try {
-                writer.write(postData);
-                writer.flush();
-
-                while ((bytesRead = listener.read(contents)) != -1) {
-                    response += new String(contents, 0, bytesRead);
-                }
-
-                if (!response.isEmpty()) {
-                   // Toast.makeText(getApplicationContext(), "Problem sending data, received response from server: "
-                     //       + response, Toast.LENGTH_LONG).show();
-                    if (!response.equals("good")) {
-                        e2 = "Problem sending data, received response from server: " + response;
-                        return e2;
-                    }
-                }
-
-                //remove record from local database
-                myDB.delete(r.id);
-
-
-            } catch (Exception e) {
-                //Toast.makeText(getApplicationContext(), "Problem sending data: " + e.toString(), Toast.LENGTH_LONG).show();
-                return e.toString();
-               // return null;
-            } //end try to send data
-
-            //update progress bar
-           // dialog.setProgress((int) Math.ceil(currentRecord / totalRecords));
-            currentRecord++;
-
-        } //for each r in record
-
-        return null;
-    }
-
-    */
 
     protected String send(){
 
@@ -256,15 +155,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    protected void onProgressUpdate(String... progress) {
-
-    }
-
-    protected void onPostExecute() {
-        urlConnection.disconnect();
-
-    }
-
     public void start() {
 
         start.setOnClickListener(
@@ -276,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                         switch (view.getId()) {
                             case R.id.startbtn:
                                 //startService(intent);
-                                PollingUtils.startPollingService(MainActivity.this, 10 , MyService.class, MyService.ACTION);
+                                PollingUtils.startPollingService(MainActivity.this, 100 , MyService.class, MyService.ACTION);
                                 break;
                             default:
                                 break;
