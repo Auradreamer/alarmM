@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -16,6 +17,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_TIMESTAMP = "TIMESTAMP";
     public static final String COL_SSID = "SSID";
     public static final String COL_STRENGTH = "STRENGTH";
+
+    public static final String TAG = "DatabaseHelper";
+
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
@@ -53,7 +57,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void deleteAll() {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor result = db.rawQuery("DELETE FROM scan;", null);
+        db.execSQL("DELETE FROM " + TABLE_NAME + ";");
+        //db.execSQL("CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, TIMESTAMP DATETIME, SSID TEXT, STRENGTH TEXT);");
+
+        Log.w(TAG, "Deleted all scans in local database.");
         db.close();
     }
 
@@ -81,6 +88,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.close();
 
+        Log.w(TAG, "Found "+scanRecords.length+" scans in table.");
         return scanRecords;
     }//end getAll
 

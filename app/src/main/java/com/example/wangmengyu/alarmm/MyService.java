@@ -25,6 +25,7 @@ import android.util.Log;
 public class MyService extends Service {
 
     public static final String ACTION = "com.example.wangmengyu.alarmm";
+    private static final String TAG = "MyService";
 
     WifiManager wifi;
     SimpleAdapter adapter;
@@ -74,6 +75,7 @@ public class MyService extends Service {
         for (ScanResult scan : scanList) {
             inserted = myDB.insert(sdf.format(new Date()).toString(), scan.SSID, scan.level);
             if (!inserted) {
+                Log.w(TAG, scan.toString());
                 Toast.makeText(this, "Broken\n"+scan.toString(), Toast.LENGTH_SHORT).show();
                 break;
             }
