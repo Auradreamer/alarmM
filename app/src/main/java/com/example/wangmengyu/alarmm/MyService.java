@@ -71,9 +71,10 @@ public class MyService extends Service {
 
         scanList = wifi.getScanResults();
         boolean inserted = true;
+        String date = sdf.format(new Date()).toString();
 
         for (ScanResult scan : scanList) {
-            inserted = myDB.insert(sdf.format(new Date()).toString(), scan.SSID, scan.level);
+            inserted = myDB.insert(date, scan.SSID, scan.BSSID, scan.level);
             if (!inserted) {
                 Log.w(TAG, scan.toString());
                 Toast.makeText(this, "Broken\n"+scan.toString(), Toast.LENGTH_SHORT).show();

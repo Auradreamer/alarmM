@@ -16,6 +16,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_ID = "ID";
     public static final String COL_TIMESTAMP = "TIMESTAMP";
     public static final String COL_SSID = "SSID";
+    public static final String COL_BSSID = "BSSID";
     public static final String COL_STRENGTH = "STRENGTH";
 
     public static final String TAG = "DatabaseHelper";
@@ -28,7 +29,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        db.execSQL("CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, TIMESTAMP DATETIME, SSID TEXT, STRENGTH TEXT);");
+        db.execSQL("CREATE TABLE " + TABLE_NAME
+                + " (" + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COL_TIMESTAMP + " DATETIME,"
+                + COL_SSID + " TEXT, "
+                + COL_BSSID + " TEXT, "
+                + COL_STRENGTH + " TEXT);");
     }
 
     @Override
@@ -36,12 +42,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public boolean insert(String t, String ssid, int strength) {
+    public boolean insert(String t, String ssid, String bssid, int strength) {
 
         SQLiteDatabase db = this.getReadableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(COL_TIMESTAMP, t);
         cv.put(COL_SSID, ssid);
+        cv.put(COL_BSSID, bssid);
         cv.put(COL_STRENGTH, strength);
         db.insert(TABLE_NAME, null, cv);
         db.close();
@@ -72,6 +79,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + COL_ID + ", "
                 + COL_TIMESTAMP + ", "
                 + COL_SSID + ", "
+                        + COL_BSSID + ", "
                 + COL_STRENGTH
                 + " FROM " + TABLE_NAME + ";", null);
         ScanRecord[] scanRecords = new ScanRecord[result.getCount()];
@@ -82,7 +90,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     result.getInt(0),
                     result.getString(1),
                     result.getString(2),
-                    result.getInt(3));
+                    result.getString(3),
+                    result.getInt(4));
             index++;
         } //end while result.moveToNext
 
