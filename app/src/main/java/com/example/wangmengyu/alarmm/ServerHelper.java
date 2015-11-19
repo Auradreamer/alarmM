@@ -52,7 +52,7 @@ public class ServerHelper {
 
         //get records and set up json
         DatabaseHelper myDB = new DatabaseHelper(context);
-        ScanRecord[] records = myDB.getAll();
+        ScanRecord[] records = myDB.getThousand();
         JSONArray json_records = new JSONArray();
         JSONObject json_r, json_message;
 
@@ -62,6 +62,7 @@ public class ServerHelper {
                 json_r = new JSONObject();
                 json_r.put("stamp", URLEncoder.encode(r.timestamp, "UTF-8"));
                 json_r.put("ssid", r.ssid);
+                json_r.put("bssid", r.bssid);
                 json_r.put("strength", r.levelToString());
             } catch (Exception e) {
                 Log.w(TAG, e.toString());
@@ -107,7 +108,7 @@ public class ServerHelper {
             //clean up
             os.flush();
 
-            myDB.deleteAll();
+            myDB.deleteThousand();
 
             //clean up
             os.close();

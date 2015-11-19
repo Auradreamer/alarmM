@@ -71,6 +71,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void deleteThousand() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        //"delete from " + MYDATABASE_TABLE +
+        //" where "+KEY_ID+" in (select "+ KEY_ID +" from "+ MYDATABASE_TABLE+" order by _id LIMIT 3);";
+        db.execSQL("DELETE FROM " + TABLE_NAME + " WHERE " + COL_ID +" IN ( "
+                + "SELECT " + COL_ID + " FROM " + TABLE_NAME
+                +" ORDER BY " + COL_ID + " ASC LIMIT 1000);");
+        //db.execSQL("CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, TIMESTAMP DATETIME, SSID TEXT, STRENGTH TEXT);");
+
+        Log.w(TAG, "Deleted up to one thousand scans in local database.");
+        db.close();
+    }
+
     public ScanRecord[] getAll() {
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -97,7 +110,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.close();
 
-        Log.w(TAG, "Found "+scanRecords.length+" scans in table.");
+        Log.w(TAG, "Found " + scanRecords.length + " scans in table.");
+        return scanRecords;
+    }//end getAll
+
+    public ScanRecord[] getThousand() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor result = db.rawQuery(
+                "SELECT "
+                        + COL_ID + ", "
+                        + COL_TIMESTAMP + ", "
+                        + COL_SSID + ", "
+                        + COL_BSSID + ", "
+                        + COL_STRENGTH
+                        + " FROM " + TABLE_NAME
+                        + " ORDER BY " + COL_ID + " ASC LIMIT 1000;", null);
+        ScanRecord[] scanRecords = new ScanRecord[result.getCount()];
+
+        int index = 0;
+        while (result.moveToNext()) {
+            scanRecords[index] = new ScanRecord(
+                    result.getInt(0),
+                    result.getString(1),
+                    result.getString(2),
+                    result.getString(3),
+                    result.getInt(4));
+            index++;
+        } //end while result.moveToNext
+
+        db.close();
+
+        Log.w(TAG, "Found " + scanRecords.length + " scans in table.");
         return scanRecords;
     }//end getAll
 
