@@ -55,6 +55,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
+    public boolean execute(String sql_string) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            db.execSQL(sql_string);
+        } catch (Exception e) {
+            Log.w(TAG, e.toString());
+            db.close();
+            return false;
+        }
+
+        Log.w(TAG, "Executed string.");
+        db.close();
+        return true;
+    }
+
     public void delete(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
 

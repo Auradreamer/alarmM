@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import android.text.TextUtils;
 
 import android.app.Activity;
 import android.content.Context;
@@ -74,12 +75,48 @@ public class MyService extends Service {
         String date = sdf.format(new Date()).toString();
 
         for (ScanResult scan : scanList) {
-            inserted = myDB.insert(date, scan.SSID, scan.BSSID, scan.level);
+            inserted = myDB.insert(date, scan.SSID.replace("\"", "").replace("\'", ""), scan.BSSID.replace("\"", "").replace("\'", ""), scan.level);
             if (!inserted) {
                 Log.w(TAG, scan.toString());
                 Toast.makeText(this, "Broken\n"+scan.toString(), Toast.LENGTH_SHORT).show();
                 break;
             }
+        }
+
+        if (inserted)
+            Toast.makeText(this, "Scan entered into database", Toast.LENGTH_SHORT).show();
+
+    }
+
+    private void insertionAll() {
+
+        scanList = wifi.getScanResults();
+        boolean inserted = true;
+        String date = sdf.format(new Date()).toString();
+
+        String sql_string = "INSERT INTO " + myDB.TABLE_NAME + " ( "
+                + myDB.COL_SSID + ", "
+                + myDB.COL_BSSID + ", "
+                + myDB.COL_STRENGTH + ", "
+                + myDB.COL_TIMESTAMP
+                + ") VALUES ";
+
+        List<String> sql_values = new ArrayList<String>();
+
+        for (ScanResult scan : scanList) {
+            sql_values.add("("
+                    + scan.SSID.replace("\"", "").replace("\'", "") + ", "
+                    + scan.BSSID + ", "
+                    + scan.level + ", "
+                    + date +")");
+        }
+
+        sql_string = sql_string + TextUtils.join(", ", sql_values) + ";";
+
+        inserted = myDB.execute(sql_string);
+        if (!inserted) {
+            Log.w(TAG, sql_string);
+            Toast.makeText(this, "Broken\n"+sql_string.toString(), Toast.LENGTH_SHORT).show();
         }
 
         if (inserted)
