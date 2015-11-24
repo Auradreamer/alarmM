@@ -66,10 +66,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
 
-                        Intent intent = new Intent(MainActivity.this, MyService.class);
+
                         switch (view.getId()) {
                             case R.id.startbtn:
-                                //startService(intent);
+
                                 PollingUtils.startPollingService(MainActivity.this, 60, MyService.class, MyService.ACTION);
                                 break;
                             default:
@@ -93,11 +93,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
 
-                        Intent intent = new Intent(MainActivity.this, MyService.class);
+
                         switch (view.getId())
                         {
                             case R.id.stopbtn:
-                                //stopService(intent);
+
                                 PollingUtils.stopPollingService(MainActivity.this,MyService.class,MyService.ACTION);
                                 break;
                             default:
